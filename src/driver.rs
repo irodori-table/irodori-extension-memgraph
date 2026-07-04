@@ -329,12 +329,7 @@ async fn run_cypher(
 }
 
 async fn load_metadata(connection: &GraphConnection) -> Result<Value, String> {
-    let (label_columns, label_rows, _) = run_cypher(
-        connection,
-        "CALL db.labels() YIELD label RETURN label",
-        1_000,
-    )
-    .await?;
+    let (label_columns, label_rows, _) = load_labels(connection).await?;
     let label_idx = label_columns.iter().position(|column| column == "label");
     let mut objects = Vec::new();
     if let Some(label_idx) = label_idx {
@@ -345,13 +340,9 @@ async fn load_metadata(connection: &GraphConnection) -> Result<Value, String> {
         }
     }
 
-    let (rel_columns, rel_rows, _) = run_cypher(
-        connection,
-        "CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType",
-        1_000,
-    )
-    .await
-    .unwrap_or_default();
+    let (rel_columns, rel_rows, _) = load_relationship_types(connection)
+        .await
+        .unwrap_or_default();
     if let Some(rel_idx) = rel_columns
         .iter()
         .position(|column| column == "relationshipType")
@@ -369,6 +360,46 @@ async fn load_metadata(connection: &GraphConnection) -> Result<Value, String> {
             "objects": objects
         }]
     }))
+}
+
+async fn load_labels(connection: &GraphConnection) -> Result<QueryOutput, String> {
+    match run_cypher(
+        connection,
+        "CALL db.labels() YIELD label RETURN label",
+        1_000,
+    )
+    .await
+    {
+        Ok(output) => Ok(output),
+        Err(_) => {
+            run_cypher(
+                connection,
+                "MATCH (n) UNWIND labels(n) AS label RETURN DISTINCT label LIMIT 1000",
+                1_000,
+            )
+            .await
+        }
+    }
+}
+
+async fn load_relationship_types(connection: &GraphConnection) -> Result<QueryOutput, String> {
+    match run_cypher(
+        connection,
+        "CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType",
+        1_000,
+    )
+    .await
+    {
+        Ok(output) => Ok(output),
+        Err(_) => {
+            run_cypher(
+                connection,
+                "MATCH ()-[r]->() RETURN DISTINCT type(r) AS relationshipType LIMIT 1000",
+                1_000,
+            )
+            .await
+        }
+    }
 }
 
 async fn label_metadata(
