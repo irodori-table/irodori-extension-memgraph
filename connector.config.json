@@ -481,7 +481,7 @@
   },
   "source": {
     "marketplaceId": "irodori.memgraph",
-    "repository": "https://github.com/hjosugi/irodori-extension-memgraph",
+    "repository": "https://github.com/irodori-table/irodori-extension-memgraph",
     "knowledgeEngineStatus": "recognized_no_connector",
     "adapter": null,
     "adapterSha256": null,
