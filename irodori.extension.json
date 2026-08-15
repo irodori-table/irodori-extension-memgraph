@@ -3,7 +3,7 @@
   "manifestVersion": 1,
   "id": "irodori.memgraph",
   "name": "Memgraph Connector",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "publisher": "irodori",
   "description": "Memgraph Connector contributes the Memgraph database connector through the native connector ABI.",
   "license": "MIT OR 0BSD",
